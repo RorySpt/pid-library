@@ -16,20 +16,18 @@ namespace pid {
     template<typename T = double>
         requires std::is_floating_point_v<T>
     class TPID {
+    public:
+        struct Params { T kp, ki, kd, maxInt, maxOut; };
     private:
-        T kp;
-        T ki;
-        T kd;
-        T maxInt;
-        T maxOut;
+        Params params;
         T error;
         T lastError;
         T integral;
         T output;
 
     public:
-        TPID(T p, T i, T d, T mi, T mo)
-            : kp(p), ki(i), kd(d), maxInt(mi), maxOut(mo),
+        TPID(Params _params)
+            : params(_params),
               error(0), lastError(0), integral(0), output(0) {
         }
 
@@ -37,14 +35,14 @@ namespace pid {
             lastError = error;
             error = ref - fdb;
 
-            T pErr = error * kp;
-            T dErr = (error - lastError) * kd;
+            T pErr = error * params.kp;
+            T dErr = (error - lastError) * params.kd;
 
-            integral += ki * error;
-            integral = std::clamp(integral, -maxInt, maxInt);
+            integral += params.ki * error;
+            integral = std::clamp(integral, -params.maxInt, params.maxInt);
 
             T sumErr = pErr + dErr + integral;
-            output = std::clamp(sumErr, -maxOut, maxOut);
+            output = std::clamp(sumErr, -params.maxOut, params.maxOut);
         }
 
         void clear() {
@@ -70,9 +68,11 @@ namespace pid {
         T output;
 
     public:
-        TCascadePID(const T inParams[5], const T outParams[5])
-            : inner(inParams[0], inParams[1], inParams[2], inParams[3], inParams[4]),
-              outer(outParams[0], outParams[1], outParams[2], outParams[3], outParams[4]),
+        using Params = TPID<T>::Params;
+
+        TCascadePID(Params inParams, Params outParams)
+            : inner(inParams),
+              outer(outParams),
               output(0) {
         }
 
