@@ -14,6 +14,9 @@ namespace pid {
      * @brief 模板化的PID控制器类
      * @tparam T 浮点类型，默认为double
      * @requires std::is_floating_point_v<T> 确保模板参数为浮点类型
+     * 实现标准位置式PID算法：
+     * Output = Kp*error + Ki*∫error + Kd*Δerror
+     * 支持积分抗饱和(anti-windup)和输出限幅
      */
     template<typename T = double>
         requires std::is_floating_point_v<T>
@@ -49,6 +52,12 @@ namespace pid {
          * @brief 计算PID输出
          * @param ref 设定值(Reference)
          * @param fdb 反馈值(Feedback)
+         * 计算步骤：
+         *  1. 更新当前误差
+         *  2. 计算比例项：P = Kp * error
+         *  3. 计算微分项：D = Kd * (error - lastError)
+         *  4. 更新积分项（带限幅）：integral = clamp(integral + Ki*error, -maxInt, maxInt)
+         *  5. 输出限幅：output = clamp(P + I + D, -maxOut, maxOut)
          */
         void calc(T ref, T fdb) {
             lastError = error;
@@ -120,6 +129,10 @@ namespace pid {
          * @param outRef 外环设定值
          * @param outFdb 外环反馈值
          * @param inFdb 内环反馈值
+         * 流程：
+         *  1. 外环计算：outer.calc(outRef, outFdb)
+         *  2. 内环设定值 = 外环输出
+         *  3. 内环计算：inner.calc(outer_output, inFdb)
          */
         void calc(T outRef, T outFdb, T inFdb) {
             // 先计算外环输出(作为内环的设定值)
