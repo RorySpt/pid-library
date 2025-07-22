@@ -1,4 +1,11 @@
 set(_target "imgui")
+macro(printlist list)
+    message("search " ${list} )
+    foreach(v ${${list}})
+        message("found " ${v} )
+    endforeach()
+endmacro()
+
 
 #add_library(${_target})
 
@@ -12,6 +19,11 @@ file(GLOB BACKENDS_H_FILES
         ${imgui-root}/backends/imgui_impl_glfw.h
         ${imgui-root}/backends/imgui_impl_opengl3*.h
 )
+
+file(GLOB IMGUI_H_FILES
+        ${imgui-root}/*.h
+)
+#printlist(IMGUI_H_FILES)
 #message("search " SANDBOX_IMGUI_CPP_FILES )
 #foreach(CPP_FILE ${SANDBOX_IMGUI_CPP_FILES})
 #    message("found " ${CPP_FILE} )
